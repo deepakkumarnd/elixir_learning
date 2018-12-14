@@ -2,44 +2,35 @@ defmodule Day2Part2 do
   def common_box_id_letters(input) do
     input
     |> String.split("\n", trim: true)
-    |> find_string_diff()
+    |> Enum.map(&String.to_charlist/1)
+    |> closest()
   end
 
-  def find_string_diff(list) when is_list(list) do
-    list
-    |> Enum.map(&String.codepoints(&1))
-    |> match_code_points([])
-    |> common_letters()
+  def closest([head|tail]) do
+    Enum.find_value(tail, &one_char_difference(&1, head)) || closest(tail)
   end
 
-  def common_letters([a|b]) do
-    Enum.zip(a,b)
-    |> Enum.map(fn({a,b}) ->
-      if a == b, do: a, else: ''
-    end)
+  def one_char_difference(charlist1, charlist2) do
+    one_char_difference(charlist1, charlist2, [], 0)
+  end
+
+  def one_char_difference([head|tail1], [head|tail2], same, difference_count) do
+    one_char_difference(tail1, tail2, [head|same], difference_count)
+  end
+
+  def one_char_difference([_|tail1], [_|tail2], same, difference_count) do
+    one_char_difference(tail1, tail2, same, difference_count + 1)
+  end
+
+  # since the length of each string is same they will become empty at the same time
+  def one_char_difference([], [], same, 1) do
+    same
+    |> Enum.reverse()
     |> List.to_string()
   end
 
-  def match_code_points([head|tail], acc) do
-    items = Enum.filter(tail, &find_single_match(head, &1))
-
-    acc = acc ++ if length(items) > 0 do
-      items ++ head
-    else
-      []
-    end
-
-    match_code_points(tail, acc)
-  end
-
-  def match_code_points([], acc) do
-    acc
-  end
-
-  def find_single_match(arr1, arr2) do
-    Enum.zip(arr1, arr2)
-    |> Enum.count(fn({a,b}) -> a != b end)
-    |> Kernel.==(1)
+  def one_char_difference([], [], _same, _) do
+    nil
   end
 end
 
